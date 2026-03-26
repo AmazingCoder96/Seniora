@@ -4,7 +4,7 @@ import {
   X, Plus, UserPlus, Settings, Palette, Image as ImageIcon, Send,
   Activity, Home as HomeIcon, Users, Map as MapIcon, 
   HeartPulse, Footprints, Moon, MessageSquare, Newspaper, Edit2, 
-  Clock, Tag, ChevronRight, Navigation, Tv, Gamepad2, Play, ExternalLink, Globe, Star, Lightbulb, Utensils, User
+  Clock, Tag, ChevronRight, Navigation, Tv, Gamepad2, Play, ExternalLink, Globe, Star, Lightbulb, Utensils, User, Wrench, ShieldCheck, Bell
 } from 'lucide-react';
 
 export default function App() {
@@ -15,6 +15,7 @@ export default function App() {
 
   // User Preferences
   const [userName, setUserName] = useState('Arthur');
+  const [fontSizeMult, setFontSizeMult] = useState(100);
 
   // Modal & Detail States
   const [isAddingPill, setIsAddingPill] = useState(false);
@@ -29,6 +30,64 @@ export default function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab]);
+
+  // Global Font Size Effect
+  useEffect(() => {
+    document.documentElement.style.fontSize = `${fontSizeMult}%`;
+    return () => { document.documentElement.style.fontSize = ''; };
+  }, [fontSizeMult]);
+
+  // Global Haptic Feedback
+  useEffect(() => {
+    const handleClick = (e) => {
+      const isButton = e.target.closest('button') || e.target.closest('a');
+      if (isButton && typeof navigator !== 'undefined' && navigator.vibrate) {
+        // Very short vibration for tactile feedback
+        navigator.vibrate(50);
+      }
+    };
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, []);
+
+  // Web Audio Synth for Games
+  const playSound = (type) => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      
+      if (type === 'flip') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.05);
+      } else if (type === 'match') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.2);
+      } else if (type === 'star') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      }
+    } catch (e) {
+      // Audio fallback (silent if not supported)
+      console.log('Audio playback failed or unsupported.');
+    }
+  };
 
   // Game 1: Memory Match State
   const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊'];
@@ -61,6 +120,34 @@ export default function App() {
     { id: 1, name: 'Sarah (Daughter)', phone: '5550192', icon: <Phone className="w-8 h-8" /> },
     { id: 2, name: 'Dr. Smith', phone: '5550198', icon: <Phone className="w-8 h-8" /> },
   ]);
+
+  const [notifications] = useState([
+    { id: 1, from: 'Sarah (Daughter)', text: 'Don\'t forget our video call at 3 PM today!', time: '1h ago', read: false },
+    { id: 2, from: 'Dr. Smith', text: 'Your recent blood test results are completely normal.', time: '3h ago', read: false },
+    { id: 3, from: 'Sarah (Daughter)', text: 'Do you need anything from the grocery store? Let me know!', time: '1d ago', read: true },
+    { id: 4, from: 'Community Center', text: 'Bingo night starts at 6 PM tomorrow in the main hall.', time: '2d ago', read: true },
+    { id: 5, from: 'Dr. Smith', text: 'Reminder: Standard check-up appointment next Tuesday.', time: '5d ago', read: true },
+  ]);
+
+  const trustedServices = [
+    { id: 1, name: "Mike's Handyman Setup", type: "Handyman", phone: "555-0123", rating: 4.9 },
+    { id: 2, name: "Green Thumb Gardeners", type: "Gardener", phone: "555-0456", rating: 4.8 },
+    { id: 3, name: "FreshDrop Groceries", type: "Delivery", phone: "555-0789", rating: 4.9 }
+  ];
+
+  // Mock Trend Data
+  const hrData = [
+    { time: '24h ago', val: 68 }, { time: '20h ago', val: 70 }, { time: '16h ago', val: 75 },
+    { time: '12h ago', val: 82 }, { time: '8h ago', val: 74 }, { time: '4h ago', val: 71 }, { time: 'Now', val: 72 }
+  ];
+  const stepsData = [
+    { day: '6d ago', val: 3200 }, { day: '5d ago', val: 4100 }, { day: '4d ago', val: 2800 },
+    { day: '3d ago', val: 5000 }, { day: '2d ago', val: 3900 }, { day: 'Yesterday', val: 4500 }, { day: 'Today', val: 4320 }
+  ];
+  const sleepData = [
+    { day: '6d ago', val: 7.0 }, { day: '5d ago', val: 6.5 }, { day: '4d ago', val: 8.0 },
+    { day: '3d ago', val: 7.2 }, { day: '2d ago', val: 6.8 }, { day: 'Yesterday', val: 7.5 }, { day: 'Today', val: 7.2 }
+  ];
 
   const newsArticles = [
     { 
@@ -119,6 +206,8 @@ export default function App() {
 
   const handleCardClick = (index) => {
     if (flippedCards.length === 2 || matchedCards.includes(index) || flippedCards.includes(index)) return;
+    
+    playSound('flip');
     const newFlipped = [...flippedCards, index];
     setFlippedCards(newFlipped);
     
@@ -126,6 +215,7 @@ export default function App() {
       if (cards[newFlipped[0]] === cards[newFlipped[1]]) {
         setMatchedCards([...matchedCards, ...newFlipped]);
         setFlippedCards([]);
+        setTimeout(() => playSound('match'), 100);
       } else {
         setTimeout(() => setFlippedCards([]), 1000);
       }
@@ -362,11 +452,98 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Health Trends */}
+              <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
+                <h2 className="text-2xl font-black mb-6 flex items-center gap-2"><Activity className="w-6 h-6" /> Health Trends</h2>
+                <div className="space-y-8">
+                  
+                  {/* Heart Rate Line Graph */}
+                  <div>
+                    <h3 className="text-xl font-bold mb-3 opacity-90">Heart Rate (Past 24h)</h3>
+                    <div className={`p-4 rounded-2xl ${themeMode !== 'default' ? 'border-2 border-current bg-transparent' : 'bg-slate-50 border-2 border-slate-100'}`}>
+                      <svg viewBox="0 0 300 100" className="w-full h-32 overflow-visible">
+                        <polyline 
+                          points={hrData.map((d, i) => `${i * 50},${90 - (d.val / 150) * 70}`).join(' ')} 
+                          fill="none" 
+                          stroke={themeMode !== 'default' ? 'currentColor' : '#f43f5e'} 
+                          strokeWidth="4" 
+                          strokeLinejoin="round" 
+                          strokeLinecap="round" 
+                        />
+                        {hrData.map((d, i) => (
+                          <g key={d.time}>
+                            <circle cx={i * 50} cy={90 - (d.val / 150) * 70} r="5" fill={themeMode !== 'default' ? 'currentColor' : '#f43f5e'} />
+                            <text x={i * 50} y={90 - (d.val / 150) * 70 - 12} fontSize="12" fill="currentColor" textAnchor="middle" fontWeight="bold">{d.val}</text>
+                          </g>
+                        ))}
+                      </svg>
+                      <div className="flex justify-between mt-4">
+                        {hrData.map(d => <span key={d.time} className="text-[10px] font-bold opacity-70 w-8 text-center leading-tight">{d.time}</span>)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Steps Line Graph */}
+                  <div>
+                    <h3 className="text-xl font-bold mb-3 opacity-90">Steps (Past Week)</h3>
+                    <div className={`p-4 rounded-2xl ${themeMode !== 'default' ? 'border-2 border-current bg-transparent' : 'bg-slate-50 border-2 border-slate-100'}`}>
+                      <svg viewBox="0 0 300 100" className="w-full h-32 overflow-visible">
+                        <polyline 
+                          points={stepsData.map((d, i) => `${i * 50},${90 - (d.val / 6000) * 70}`).join(' ')} 
+                          fill="none" 
+                          stroke={themeMode !== 'default' ? 'currentColor' : '#6366f1'} 
+                          strokeWidth="4" 
+                          strokeLinejoin="round" 
+                          strokeLinecap="round" 
+                        />
+                        {stepsData.map((d, i) => (
+                          <g key={d.day}>
+                            <circle cx={i * 50} cy={90 - (d.val / 6000) * 70} r="5" fill={themeMode !== 'default' ? 'currentColor' : '#6366f1'} />
+                            <text x={i * 50} y={90 - (d.val / 6000) * 70 - 12} fontSize="12" fill="currentColor" textAnchor="middle" fontWeight="bold">{d.val}</text>
+                          </g>
+                        ))}
+                      </svg>
+                      <div className="flex justify-between mt-4">
+                        {stepsData.map(d => <span key={d.day} className="text-[10px] font-bold opacity-70 w-8 text-center leading-tight">{d.day}</span>)}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sleep Line Graph */}
+                  <div>
+                    <h3 className="text-xl font-bold mb-3 opacity-90">Sleep (Past Week)</h3>
+                    <div className={`p-4 rounded-2xl ${themeMode !== 'default' ? 'border-2 border-current bg-transparent' : 'bg-slate-50 border-2 border-slate-100'}`}>
+                      <svg viewBox="0 0 300 100" className="w-full h-32 overflow-visible">
+                        <polyline 
+                          points={sleepData.map((d, i) => `${i * 50},${90 - (d.val / 10) * 70}`).join(' ')} 
+                          fill="none" 
+                          stroke={themeMode !== 'default' ? 'currentColor' : '#3b82f6'} 
+                          strokeWidth="4" 
+                          strokeLinejoin="round" 
+                          strokeLinecap="round" 
+                        />
+                        {sleepData.map((d, i) => (
+                          <g key={d.day}>
+                            <circle cx={i * 50} cy={90 - (d.val / 10) * 70} r="5" fill={themeMode !== 'default' ? 'currentColor' : '#3b82f6'} />
+                            <text x={i * 50} y={90 - (d.val / 10) * 70 - 12} fontSize="12" fill="currentColor" textAnchor="middle" fontWeight="bold">{d.val}</text>
+                          </g>
+                        ))}
+                      </svg>
+                      <div className="flex justify-between mt-4">
+                        {sleepData.map(d => <span key={d.day} className="text-[10px] font-bold opacity-70 w-8 text-center leading-tight">{d.day}</span>)}
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+
               {/* Food of the Day */}
               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Utensils className="w-6 h-6" /> Food of the Day</h2>
                 <div className={`p-4 rounded-[2rem] border-4 ${themeMode !== 'default' ? 'border-current bg-transparent' : 'border-slate-100 bg-slate-50'}`}>
-                  <img src="https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=600&q=80" alt="Oatmeal with Berries" className="w-full h-48 object-cover rounded-[1.5rem] mb-4 shadow-sm" />
+                  {/* Updated Stock Photo to the precise Vecteezy image provided */}
+                  <img src="https://static.vecteezy.com/system/resources/thumbnails/072/926/777/small/a-healthy-and-delicious-breakfast-bowl-of-oatmeal-porridge-topped-with-fresh-berries-banana-and-walnuts-photo.jpg" alt="Oatmeal with Berries" className="w-full h-48 object-cover rounded-[1.5rem] mb-4 shadow-sm" />
                   <h3 className="text-2xl font-black mb-2">Berry Oatmeal Bowl</h3>
                   <p className="text-lg font-bold opacity-80 mb-5 leading-relaxed">
                     A heart-healthy, high-fiber breakfast that is incredibly easy to prepare and great for digestion.
@@ -415,7 +592,24 @@ export default function App() {
 
           {/* TAB: CONTACTS */}
           {activeTab === 'contacts' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4">
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4">
+              
+              {/* Notifications Box */}
+              <section className={`${styles.card} rounded-[2.5rem] p-8 transition-all`}>
+                <h2 className="text-3xl font-black mb-6 flex items-center gap-3"><Bell className="w-8 h-8" /> Notifications</h2>
+                <div className="overflow-y-auto max-h-64 pr-2 space-y-3">
+                  {notifications.map(notif => (
+                    <div key={notif.id} className={`p-5 border-4 rounded-2xl ${notif.read ? 'opacity-60' : 'border-blue-400 bg-blue-50'} ${themeMode !== 'default' ? 'border-current bg-transparent' : 'border-slate-200'}`}>
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="font-black text-xl">{notif.from}</span>
+                        <span className="text-sm font-bold opacity-60">{notif.time}</span>
+                      </div>
+                      <p className="text-lg font-bold leading-snug">{notif.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
               <section className={`${styles.card} rounded-[2.5rem] p-8 transition-all`}>
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-3xl font-black flex items-center gap-3"><Phone className="w-8 h-8" /> Contacts</h2>
@@ -435,12 +629,14 @@ export default function App() {
                   ))}
                 </div>
               </section>
+
             </div>
           )}
 
           {/* TAB: COMMUNITY */}
           {activeTab === 'community' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 pb-12">
+              
               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all overflow-hidden`}>
                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><MapIcon className="w-6 h-6" /> Local Map</h2>
                 <div className={`w-full h-64 rounded-[2rem] border-4 overflow-hidden relative ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 shadow-inner'}`}>
@@ -497,6 +693,29 @@ export default function App() {
                   ))}
                 </div>
               </section>
+
+              {/* Trusted Services List moved to the bottom of the Local tab */}
+              <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
+                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><ShieldCheck className="w-6 h-6" /> Trusted Services</h2>
+                <p className="text-sm font-bold opacity-70 mb-4">Highly rated local helpers recommended by neighbors.</p>
+                <div className="space-y-4">
+                  {trustedServices.map(service => (
+                     <div key={service.id} className={`p-5 border-4 rounded-[2rem] flex justify-between items-center ${themeMode !== 'default' ? 'border-current' : 'border-slate-100 bg-slate-50'}`}>
+                        <div>
+                          <h3 className="font-black text-xl mb-1">{service.name}</h3>
+                          <div className="font-bold opacity-70 text-sm flex items-center gap-3">
+                             <span className="flex items-center gap-1"><Wrench className="w-4 h-4" /> {service.type}</span>
+                             <span className="flex items-center gap-1"><Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> {service.rating}</span>
+                          </div>
+                        </div>
+                        <button onClick={() => alert(`Calling ${service.name}...`)} className={`p-4 rounded-full active:scale-95 shadow-md ${styles.saveBtn}`}>
+                          <Phone className="w-6 h-6" />
+                        </button>
+                     </div>
+                  ))}
+                </div>
+              </section>
+
             </div>
           )}
 
@@ -565,11 +784,15 @@ export default function App() {
 
         </main>
 
-        {/* SOS BUTTON */}
+        {/* SOS BUTTON - Hardcoded sizes to bypass root font size scaling */}
         <div className="fixed bottom-32 left-0 right-0 px-6 max-w-md mx-auto z-40">
-          <button onClick={() => setSosActive(true)} className={`w-full p-6 rounded-[2.5rem] shadow-2xl flex items-center justify-center gap-4 active:scale-95 transition-all ${styles.sosBtn}`}>
-            <AlertCircle className="w-12 h-12" />
-            <span className="text-4xl font-black uppercase">Emergency SOS</span>
+          <button 
+            onClick={() => setSosActive(true)} 
+            className={`w-full shadow-2xl flex items-center justify-center active:scale-95 transition-all ${styles.sosBtn}`}
+            style={{ padding: '24px', borderRadius: '40px', gap: '16px' }}
+          >
+            <AlertCircle style={{ width: '48px', height: '48px' }} />
+            <span style={{ fontSize: '36px', fontWeight: 900, textTransform: 'uppercase', lineHeight: 1 }}>Emergency SOS</span>
           </button>
         </div>
 
@@ -583,48 +806,52 @@ export default function App() {
           ))}
         </nav>
 
-        {/* GAME MODAL: MEMORY MATCH */}
+        {/* GAME MODAL: MEMORY MATCH (Styled with hard px so it ignores global font scaling) */}
         {activeGame === 'memory' && (
           <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8 flex flex-col items-center`}>
-              <div className="w-full flex items-center justify-between mb-8">
-                <h2 className="text-4xl font-black">Memory Match</h2>
-                <button onClick={() => setActiveGame(null)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-10 h-10" /></button>
+            <div className={`${styles.modalBg} flex flex-col items-center`} style={{ width: '100%', maxWidth: '448px', padding: '32px', borderRadius: '48px' }}>
+              <div className="w-full flex items-center justify-between" style={{ marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '36px', fontWeight: 900 }}>Memory Match</h2>
+                <button onClick={() => setActiveGame(null)} className={`rounded-full ${styles.iconContainer}`} style={{ padding: '12px' }}>
+                  <X style={{ width: '40px', height: '40px' }} />
+                </button>
               </div>
-              <div className="grid grid-cols-3 gap-3 w-full mb-8">
+              <div className="grid grid-cols-3 w-full" style={{ gap: '12px', marginBottom: '32px' }}>
                 {cards.map((emoji, i) => (
-                  <button key={i} onClick={() => handleCardClick(i)} className={`h-24 rounded-2xl border-4 text-4xl flex items-center justify-center transition-all ${themeMode !== 'default' ? 'border-current bg-transparent' : matchedCards.includes(i) ? 'bg-green-100 border-green-500' : flippedCards.includes(i) ? 'bg-white border-blue-500' : 'bg-slate-200 border-slate-300'}`}>
+                  <button key={i} onClick={() => handleCardClick(i)} className={`border-4 flex items-center justify-center transition-all ${themeMode !== 'default' ? 'border-current bg-transparent' : matchedCards.includes(i) ? 'bg-green-100 border-green-500' : flippedCards.includes(i) ? 'bg-white border-blue-500' : 'bg-slate-200 border-slate-300'}`} style={{ height: '96px', borderRadius: '16px', fontSize: '48px' }}>
                     {(flippedCards.includes(i) || matchedCards.includes(i)) ? emoji : '?'}
                   </button>
                 ))}
               </div>
-              {matchedCards.length === cards.length && <p className="text-3xl font-black mb-4">Well Done!</p>}
-              <button onClick={initMemoryGame} className={`w-full text-3xl font-black py-6 rounded-[2rem] ${styles.saveBtn}`}>Restart</button>
+              {matchedCards.length === cards.length && <p style={{ fontSize: '30px', fontWeight: 900, marginBottom: '16px' }}>Well Done!</p>}
+              <button onClick={initMemoryGame} className={`w-full ${styles.saveBtn}`} style={{ fontSize: '30px', fontWeight: 900, padding: '24px 0', borderRadius: '32px' }}>Restart</button>
             </div>
           </div>
         )}
 
-        {/* GAME MODAL: TAP THE STAR */}
+        {/* GAME MODAL: TAP THE STAR (Styled with hard px so it ignores global font scaling) */}
         {activeGame === 'star' && (
           <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8 flex flex-col items-center`}>
-              <div className="w-full flex items-center justify-between mb-8">
-                <h2 className="text-4xl font-black">Tap the Star</h2>
-                <button onClick={() => setActiveGame(null)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-10 h-10" /></button>
+            <div className={`${styles.modalBg} flex flex-col items-center`} style={{ width: '100%', maxWidth: '448px', padding: '32px', borderRadius: '48px' }}>
+              <div className="w-full flex items-center justify-between" style={{ marginBottom: '32px' }}>
+                <h2 style={{ fontSize: '36px', fontWeight: 900 }}>Tap the Star</h2>
+                <button onClick={() => setActiveGame(null)} className={`rounded-full ${styles.iconContainer}`} style={{ padding: '12px' }}>
+                  <X style={{ width: '40px', height: '40px' }} />
+                </button>
               </div>
-              <p className="text-3xl font-black mb-6">Score: {score}</p>
-              <div className="grid grid-cols-3 gap-3 w-full mb-8">
+              <p style={{ fontSize: '30px', fontWeight: 900, marginBottom: '24px' }}>Score: {score}</p>
+              <div className="grid grid-cols-3 w-full" style={{ gap: '12px', marginBottom: '32px' }}>
                 {[...Array(9)].map((_, i) => (
-                  <div key={i} className={`h-24 rounded-2xl border-4 flex items-center justify-center ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 bg-slate-100'}`}>
+                  <div key={i} className={`border-4 flex items-center justify-center ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 bg-slate-100'}`} style={{ height: '96px', borderRadius: '16px' }}>
                     {starPos === i && (
-                      <button onClick={() => { setScore(s => s + 1); moveStar(); }} className="animate-bounce">
-                        <Star className="w-16 h-16 text-yellow-500 fill-yellow-500" />
+                      <button onClick={() => { playSound('star'); setScore(s => s + 1); moveStar(); }} className="animate-bounce">
+                        <Star style={{ width: '64px', height: '64px' }} className="text-yellow-500 fill-yellow-500" />
                       </button>
                     )}
                   </div>
                 ))}
               </div>
-              <button onClick={initStarGame} className={`w-full text-3xl font-black py-6 rounded-[2rem] ${styles.saveBtn}`}>Restart</button>
+              <button onClick={initStarGame} className={`w-full ${styles.saveBtn}`} style={{ fontSize: '30px', fontWeight: 900, padding: '24px 0', borderRadius: '32px' }}>Restart</button>
             </div>
           </div>
         )}
@@ -638,7 +865,7 @@ export default function App() {
                 <button onClick={() => setIsRecipeOpen(false)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-10 h-10" /></button>
               </div>
               
-              <img src="https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=600&q=80" alt="Oatmeal with Berries" className="w-full h-48 object-cover rounded-[1.5rem] mb-6" />
+              <img src="https://static.vecteezy.com/system/resources/thumbnails/072/926/777/small/a-healthy-and-delicious-breakfast-bowl-of-oatmeal-porridge-topped-with-fresh-berries-banana-and-walnuts-photo.jpg" alt="Oatmeal with Berries" className="w-full h-48 object-cover rounded-[1.5rem] mb-6" />
               
               <h3 className="text-3xl font-black mb-4">Berry Oatmeal Bowl</h3>
               
@@ -691,6 +918,20 @@ export default function App() {
                 </div>
 
                 <div>
+                  <label className="flex items-center justify-between gap-3 text-2xl font-black mb-4">
+                    Text Size <span>{fontSizeMult}%</span>
+                  </label>
+                  <input 
+                    type="range" 
+                    min="50" max="200" step="10"
+                    value={fontSizeMult} 
+                    onChange={e => setFontSizeMult(Number(e.target.value))} 
+                    className="w-full h-4 bg-slate-200 rounded-lg appearance-none cursor-pointer mb-2"
+                  />
+                  <p className="text-sm font-bold opacity-60">Move the slider to increase or decrease the text size globally.</p>
+                </div>
+
+                <div>
                   <label className="flex items-center gap-3 text-2xl font-black mb-4"><Palette className="w-8 h-8 opacity-80" /> Theme</label>
                   <div className="grid grid-cols-1 gap-3">
                     {['default', 'contrast', 'protanopia', 'tritanopia'].map((mode) => (
@@ -707,13 +948,25 @@ export default function App() {
           </div>
         )}
 
-        {/* SOS MODAL */}
+        {/* SOS MODAL - Hardcoded sizing */}
         {sosActive && (
           <div className="fixed inset-0 bg-red-600 z-[60] flex items-center justify-center p-4">
-            <div className="bg-white w-full max-w-md rounded-[3rem] p-10 text-center text-slate-900 shadow-2xl">
-              <h2 className="text-5xl font-black mb-6">Call 911?</h2>
-              <button onClick={() => { alert('Calling 911...'); setSosActive(false)}} className="w-full bg-red-600 text-white text-3xl font-black py-8 rounded-[2rem] mb-4 border-4 border-white">YES, CALL NOW</button>
-              <button onClick={() => setSosActive(false)} className="bg-slate-200 text-slate-800 text-2xl font-black py-6 rounded-[2rem] w-full">Cancel</button>
+            <div className="bg-white w-full max-w-md shadow-2xl" style={{ padding: '40px', borderRadius: '48px', textAlign: 'center' }}>
+              <h2 style={{ fontSize: '48px', fontWeight: 900, color: '#0f172a', marginBottom: '24px' }}>Call 911?</h2>
+              <button 
+                onClick={() => { alert('Calling 911...'); setSosActive(false)}} 
+                className="w-full bg-red-600 text-white"
+                style={{ fontSize: '30px', fontWeight: 900, padding: '32px 0', borderRadius: '32px', marginBottom: '16px', border: '4px solid white' }}
+              >
+                YES, CALL NOW
+              </button>
+              <button 
+                onClick={() => setSosActive(false)} 
+                className="bg-slate-200 text-slate-800"
+                style={{ fontSize: '24px', fontWeight: 900, padding: '24px 0', borderRadius: '32px', width: '100%' }}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}
