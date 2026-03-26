@@ -37,17 +37,22 @@ export default function App() {
     return () => { document.documentElement.style.fontSize = ''; };
   }, [fontSizeMult]);
 
-  // Global Haptic Feedback
+  // Global Haptic Feedback (Updated for better cross-device support)
   useEffect(() => {
-    const handleClick = (e) => {
-      const isButton = e.target.closest('button') || e.target.closest('a');
-      if (isButton && typeof navigator !== 'undefined' && navigator.vibrate) {
-        // Very short vibration for tactile feedback
-        navigator.vibrate(50);
+    const handleInteraction = (e) => {
+      const isInteractive = e.target.closest('button') || e.target.closest('a') || e.target.closest('input[type="range"]');
+      if (isInteractive && typeof window !== 'undefined' && window.navigator && window.navigator.vibrate) {
+        try {
+          // 50ms vibration
+          window.navigator.vibrate(50);
+        } catch (err) {
+          console.log("Haptics blocked or unsupported by this browser.", err);
+        }
       }
     };
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
+    
+    document.addEventListener('click', handleInteraction);
+    return () => document.removeEventListener('click', handleInteraction);
   }, []);
 
   // Web Audio Synth for Games
@@ -132,7 +137,7 @@ export default function App() {
   const trustedServices = [
     { id: 1, name: "Mike's Handyman Setup", type: "Handyman", phone: "555-0123", rating: 4.9 },
     { id: 2, name: "Green Thumb Gardeners", type: "Gardener", phone: "555-0456", rating: 4.8 },
-    { id: 3, name: "FreshDrop Groceries", type: "Delivery", phone: "555-0789", rating: 4.6 }
+    { id: 3, name: "FreshDrop Groceries", type: "Delivery", phone: "555-0789", rating: 4.9 }
   ];
 
   // Mock Trend Data
@@ -359,18 +364,20 @@ export default function App() {
     <div className={`min-h-screen transition-colors duration-300 ${styles.bg} ${styles.text}`}>
       <div className="max-w-md mx-auto min-h-screen flex flex-col relative pb-64">
         
-        {/* HEADER */}
+        {/* HEADER - Updated Settings Button Position */}
         <header className={`${styles.headerBg} px-6 py-8 rounded-b-[3rem] relative transition-all`}>
           <div className="flex flex-col items-center text-center">
             <h1 className={`text-6xl font-black tracking-tighter mb-1 leading-none ${styles.text}`}>{timeString}</h1>
-            <p className={`text-2xl font-bold opacity-70 uppercase tracking-wide ${styles.text}`}>{dateString}</p>
+            <p className={`text-2xl font-bold opacity-70 uppercase tracking-wide mb-5 ${styles.text}`}>{dateString}</p>
+            
+            <button 
+              onClick={() => setIsSettingsOpen(true)}
+              className={`flex items-center justify-center gap-3 w-48 py-3 rounded-full border-2 active:scale-95 transition-all shadow-sm ${themeMode !== 'default' ? 'border-current' : 'border-slate-300 bg-slate-100 text-slate-700'}`}
+            >
+              <Settings className="w-6 h-6" />
+              <span className="text-xl font-bold">Settings</span>
+            </button>
           </div>
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="absolute top-6 right-6 p-4 rounded-2xl bg-slate-100/10 text-current hover:bg-slate-100/20 active:scale-90 border-2 border-current"
-          >
-            <Settings className="w-8 h-8" />
-          </button>
         </header>
 
         {/* CONTENT */}
@@ -923,7 +930,7 @@ export default function App() {
                   </label>
                   <input 
                     type="range" 
-                    min="50" max="150" step="10"
+                    min="50" max="200" step="10"
                     value={fontSizeMult} 
                     onChange={e => setFontSizeMult(Number(e.target.value))} 
                     className="w-full h-4 bg-slate-200 rounded-lg appearance-none cursor-pointer mb-2"
