@@ -4,7 +4,7 @@ import {
   X, Plus, UserPlus, Settings, Palette, Image as ImageIcon, Send,
   Activity, Home as HomeIcon, Users, Map as MapIcon, 
   HeartPulse, Footprints, Moon, MessageSquare, Newspaper, Edit2, 
-  Clock, Tag, ChevronRight, Navigation, Tv, Gamepad2, Play, ExternalLink, Globe, Star
+  Clock, Tag, ChevronRight, Navigation, Tv, Gamepad2, Play, ExternalLink, Globe, Star, Lightbulb, Utensils, User
 } from 'lucide-react';
 
 export default function App() {
@@ -13,10 +13,14 @@ export default function App() {
   const [sosActive, setSosActive] = useState(false);
   const [activeTab, setActiveTab] = useState('home');
 
+  // User Preferences
+  const [userName, setUserName] = useState('Arthur');
+
   // Modal & Detail States
   const [isAddingPill, setIsAddingPill] = useState(false);
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isRecipeOpen, setIsRecipeOpen] = useState(false);
   const [editingPillId, setEditingPillId] = useState(null);
   const [selectedNews, setSelectedNews] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
@@ -54,8 +58,8 @@ export default function App() {
   ]);
 
   const [contacts, setContacts] = useState([
-    { id: 1, name: 'Sarah (Daughter)', type: 'Mobile', phone: '555-0192', icon: <Phone className="w-8 h-8" /> },
-    { id: 2, name: 'Dr. Smith', type: 'Voice Call', phone: '555-0198', icon: <Phone className="w-8 h-8" /> },
+    { id: 1, name: 'Sarah (Daughter)', phone: '5550192', icon: <Phone className="w-8 h-8" /> },
+    { id: 2, name: 'Dr. Smith', phone: '5550198', icon: <Phone className="w-8 h-8" /> },
   ]);
 
   const newsArticles = [
@@ -76,12 +80,12 @@ export default function App() {
   const neighborPosts = [
     { id: 1, user: 'Sarah Jenkins', time: '2h ago', type: 'Question', text: 'Does anyone know what time the parade starts on Saturday?' },
     { id: 2, user: 'Mark D.', time: '5h ago', type: 'Alert', text: 'Lost orange tabby cat near 4th street. Please keep an eye out!' },
-    { id: 3, user: 'Elena R.', time: 'Yesterday', type: 'Social', text: 'Free gardening soil available at my curb if anyone wants it!' }
+    { id: 3, user: 'Elena R.', time: '1 day ago', type: 'Social', text: 'Free gardening soil available at my curb if anyone wants it!' }
   ];
 
   const entertainmentVideos = [
-    { id: 1, title: "Relaxing Nature Walk & Bird Sounds", thumb: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=600&q=80", url: "https://www.youtube.com/watch?v=IPcNDvqLzXo" },
-    { id: 2, title: "Classic 1950s Comedy Compilation", thumb: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?auto=format&fit=crop&w=600&q=80", url: "https://www.youtube.com/watch?v=kYUPNwQYcUM" }
+    { id: 1, title: "Funny Cats Compilation", thumb: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&w=600&q=80", url: "https://www.youtube.com/watch?v=y0sF5xhGreA" },
+    { id: 2, title: "Relaxing Nature Sounds", thumb: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=600&q=80", url: "https://www.youtube.com/watch?v=eKFTSSKCzWA" }
   ];
 
   const worldNews = [
@@ -154,11 +158,11 @@ export default function App() {
 
   const handleAddContact = () => {
     if (newContactName.trim()) {
+      const formattedPhone = newContactPhone.replace(/-/g, '');
       setContacts([...contacts, { 
         id: Date.now(), 
         name: newContactName, 
-        type: 'Mobile', 
-        phone: newContactPhone, 
+        phone: formattedPhone, 
         icon: <Phone className="w-8 h-8" /> 
       }]);
       setNewContactName('');
@@ -289,7 +293,7 @@ export default function App() {
               {/* Welcome Screen */}
               <section className={`${styles.card} rounded-[2.5rem] p-8 transition-all overflow-hidden relative`}>
                 <div className="flex flex-col">
-                  <h2 className="text-4xl font-black">Welcome, Arthur</h2>
+                  <h2 className="text-4xl font-black">Welcome, {userName}</h2>
                   <p className="text-xl font-bold opacity-70 mb-4">{greeting.text}</p>
                   <p className="text-lg font-bold opacity-80">
                     {currentTime.getHours() < 12 
@@ -358,6 +362,21 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Food of the Day */}
+              <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
+                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Utensils className="w-6 h-6" /> Food of the Day</h2>
+                <div className={`p-4 rounded-[2rem] border-4 ${themeMode !== 'default' ? 'border-current bg-transparent' : 'border-slate-100 bg-slate-50'}`}>
+                  <img src="https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=600&q=80" alt="Oatmeal with Berries" className="w-full h-48 object-cover rounded-[1.5rem] mb-4 shadow-sm" />
+                  <h3 className="text-2xl font-black mb-2">Berry Oatmeal Bowl</h3>
+                  <p className="text-lg font-bold opacity-80 mb-5 leading-relaxed">
+                    A heart-healthy, high-fiber breakfast that is incredibly easy to prepare and great for digestion.
+                  </p>
+                  <button onClick={() => setIsRecipeOpen(true)} className={`w-full py-4 rounded-2xl font-black text-xl active:scale-95 transition-all shadow-md ${styles.saveBtn}`}>
+                    Read Recipe
+                  </button>
+                </div>
+              </section>
+
               <section className={`${styles.card} rounded-[2.5rem] p-8 transition-all`}>
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-3xl font-black flex items-center gap-3">
@@ -410,7 +429,7 @@ export default function App() {
                       <div className={`p-4 rounded-2xl mr-5 flex items-center justify-center ${styles.iconContainer}`}>{contact.icon}</div>
                       <div className="text-left flex-1">
                         <h3 className="text-2xl font-black mb-1">{contact.name}</h3>
-                        <p className="text-xl font-bold opacity-70">{contact.type} {contact.phone ? `• ${contact.phone}` : ''}</p>
+                        <p className="text-xl font-bold opacity-70 tracking-widest">{contact.phone}</p>
                       </div>
                     </button>
                   ))}
@@ -425,9 +444,10 @@ export default function App() {
               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all overflow-hidden`}>
                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><MapIcon className="w-6 h-6" /> Local Map</h2>
                 <div className={`w-full h-64 rounded-[2rem] border-4 overflow-hidden relative ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 shadow-inner'}`}>
+                  {/* Defaulting map to Interlake High School, Bellevue, WA */}
                   <iframe 
                     title="Community Map"
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11534.621213768297!2d-79.39054366601445!3d43.717757989341495!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b33230559489f%3A0xe6108154e0c464c!2sSunnybrook%20Health%20Sciences%20Centre!5e0!3m2!1sen!2sca!4v1715638200000!5m2!1sen!2sca" 
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2688.0772274472854!2d-122.14376372333796!3d47.64415497119293!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x54906d4e51147e85%3A0x1d3f2ec4841fb00c!2sInterlake%20High%20School!5e0!3m2!1sen!2sus!4v1715638200000!5m2!1sen!2sus" 
                     width="100%" height="100%" className={`border-0 transition-all ${styles.mapFilter}`} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade"
                   ></iframe>
                 </div>
@@ -460,8 +480,19 @@ export default function App() {
                 <div className="space-y-4">
                   {neighborPosts.map((post) => (
                     <div key={post.id} className={`p-5 border-4 rounded-[2rem] ${themeMode !== 'default' ? 'border-current' : 'border-slate-100 bg-slate-50'}`}>
-                      <span className="font-black text-xl leading-none">{post.user}</span>
-                      <p className="text-lg font-bold leading-relaxed mt-2">{post.text}</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex flex-col">
+                          <span className="font-black text-xl leading-none">{post.user}</span>
+                          <div className="flex items-center gap-2 mt-1 opacity-60 text-sm font-bold">
+                            <Clock className="w-4 h-4" />
+                            <span>{post.time}</span>
+                          </div>
+                        </div>
+                        <span className={`text-xs font-black uppercase tracking-wider py-1 px-3 rounded-full border-2 ${themeMode !== 'default' ? 'border-current' : styles.tag}`}>
+                          {post.type}
+                        </span>
+                      </div>
+                      <p className="text-lg font-bold leading-relaxed">{post.text}</p>
                     </div>
                   ))}
                 </div>
@@ -472,6 +503,17 @@ export default function App() {
           {/* TAB: ENTERTAINMENT */}
           {activeTab === 'entertainment' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 pb-12">
+               
+               {/* Fact of the Day */}
+               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
+                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Lightbulb className="w-6 h-6" /> Fact of the Day</h2>
+                 <div className={`p-6 rounded-[2rem] border-4 ${themeMode !== 'default' ? 'border-current bg-transparent' : 'border-slate-100 bg-slate-50'}`}>
+                    <p className="text-xl font-bold leading-relaxed">
+                      Did you know? Honey never spoils! Archaeologists have found pots of honey in ancient Egyptian tombs that are over 3,000 years old and still perfectly edible.
+                    </p>
+                 </div>
+               </section>
+
                <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
                  <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Gamepad2 className="w-6 h-6" /> Simple Games</h2>
                  <div className="space-y-4">
@@ -501,7 +543,7 @@ export default function App() {
                               <img src={video.thumb} alt={video.title} className="w-full h-full object-cover" />
                               <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Play className="w-14 h-14 text-white opacity-90" fill="currentColor" /></div>
                            </div>
-                           <h3 className="text-xl font-black flex justify-between items-center leading-tight">{video.title}<ExternalLink className="w-6 h-6 opacity-50 ml-2" /></h3>
+                           <h3 className="text-xl font-black flex justify-between items-center leading-tight">{video.title}<ExternalLink className="w-6 h-6 opacity-50 ml-2 shrink-0" /></h3>
                        </a>
                     ))}
                  </div>
@@ -587,6 +629,47 @@ export default function App() {
           </div>
         )}
 
+        {/* MODAL: FOOD RECIPE */}
+        {isRecipeOpen && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8 overflow-y-auto max-h-[90vh]`}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-4xl font-black">Recipe</h2>
+                <button onClick={() => setIsRecipeOpen(false)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-10 h-10" /></button>
+              </div>
+              
+              <img src="https://images.unsplash.com/photo-1517673132405-a56a62b18caf?auto=format&fit=crop&w=600&q=80" alt="Oatmeal with Berries" className="w-full h-48 object-cover rounded-[1.5rem] mb-6" />
+              
+              <h3 className="text-3xl font-black mb-4">Berry Oatmeal Bowl</h3>
+              
+              <div className="space-y-6">
+                <div>
+                  <h4 className="text-xl font-black mb-2 flex items-center gap-2"><Utensils className="w-5 h-5" /> Ingredients</h4>
+                  <ul className="list-disc list-inside text-lg font-bold opacity-80 space-y-2 ml-2">
+                    <li>1/2 cup rolled oats</li>
+                    <li>1 cup water or milk</li>
+                    <li>1/2 cup fresh berries (blueberries, strawberries)</li>
+                    <li>1 tsp honey or maple syrup</li>
+                    <li>Pinch of cinnamon</li>
+                  </ul>
+                </div>
+                
+                <div>
+                  <h4 className="text-xl font-black mb-2 flex items-center gap-2"><Clock className="w-5 h-5" /> Instructions</h4>
+                  <ol className="list-decimal list-inside text-lg font-bold opacity-80 space-y-3 ml-2">
+                    <li>Bring water or milk to a gentle boil in a small pot.</li>
+                    <li>Stir in the oats and reduce the heat to low.</li>
+                    <li>Simmer uncovered for 5 minutes, stirring occasionally.</li>
+                    <li>Remove from heat, pour into a bowl, and top with fresh berries, cinnamon, and a drizzle of honey.</li>
+                  </ol>
+                </div>
+              </div>
+              
+              <button onClick={() => setIsRecipeOpen(false)} className={`w-full text-2xl font-black py-5 rounded-[2rem] mt-8 shadow-md ${styles.saveBtn}`}>Close Recipe</button>
+            </div>
+          </div>
+        )}
+
         {/* SETTINGS MODAL */}
         {isSettingsOpen && (
           <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
@@ -596,6 +679,17 @@ export default function App() {
                 <button onClick={() => setIsSettingsOpen(false)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-10 h-10" /></button>
               </div>
               <div className="space-y-10">
+                
+                <div>
+                  <label className="flex items-center gap-3 text-2xl font-black mb-4"><User className="w-8 h-8 opacity-80" /> My Name</label>
+                  <input 
+                    type="text" 
+                    value={userName} 
+                    onChange={e => setUserName(e.target.value)} 
+                    className={`w-full p-4 rounded-2xl text-xl font-bold outline-none border-4 transition-all ${themeMode !== 'default' ? 'border-current bg-transparent' : 'border-slate-300 bg-slate-100'}`} 
+                  />
+                </div>
+
                 <div>
                   <label className="flex items-center gap-3 text-2xl font-black mb-4"><Palette className="w-8 h-8 opacity-80" /> Theme</label>
                   <div className="grid grid-cols-1 gap-3">
@@ -606,7 +700,8 @@ export default function App() {
                     ))}
                   </div>
                 </div>
-                <button onClick={() => setIsSettingsOpen(false)} className={`w-full text-3xl font-black py-6 rounded-[2rem] mt-4 ${styles.saveBtn}`}>Done</button>
+                
+                <button onClick={() => setIsSettingsOpen(false)} className={`w-full text-3xl font-black py-6 rounded-[2rem] mt-4 shadow-md ${styles.saveBtn}`}>Done</button>
               </div>
             </div>
           </div>
