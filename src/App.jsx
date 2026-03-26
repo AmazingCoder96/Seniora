@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { 
   Phone, Pill, Heart, AlertCircle, CheckCircle, Smile, Frown, Meh, 
   X, Plus, UserPlus, Settings, Palette, Image as ImageIcon, Send,
-  LayoutGrid, Activity, Home as HomeIcon, Users, Map as MapIcon, HeartPulse, Footprints, Moon, MessageSquare, Newspaper, Edit2, Clock, Tag, ChevronRight, Navigation, Sun, Sunrise, Sunset
+  Activity, Home as HomeIcon, Users, Map as MapIcon, 
+  HeartPulse, Footprints, Moon, MessageSquare, Newspaper, Edit2, 
+  Clock, Tag, ChevronRight, Navigation, Tv, Gamepad2, Play, ExternalLink, Globe, Star
 } from 'lucide-react';
 
 export default function App() {
@@ -17,6 +19,22 @@ export default function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingPillId, setEditingPillId] = useState(null);
   const [selectedNews, setSelectedNews] = useState(null);
+  const [activeGame, setActiveGame] = useState(null);
+
+  // Scroll to top on tab change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
+
+  // Game 1: Memory Match State
+  const emojis = ['🐶', '🐱', '🐭', '🐹', '🐰', '🦊'];
+  const [cards, setCards] = useState([]);
+  const [flippedCards, setFlippedCards] = useState([]);
+  const [matchedCards, setMatchedCards] = useState([]);
+
+  // Game 2: Tap the Star State
+  const [starPos, setStarPos] = useState(null);
+  const [score, setScore] = useState(0);
 
   // Accessibility State
   const [themeMode, setThemeMode] = useState('default');
@@ -56,15 +74,59 @@ export default function App() {
   ];
 
   const neighborPosts = [
-    { id: 1, user: "Sarah Jenkins", time: "2h ago", type: "Question", text: "Does anyone know what time the parade starts on Saturday?" },
-    { id: 2, user: "Mark D.", time: "5h ago", type: "Alert", text: "Lost orange tabby cat near 4th street. Please keep an eye out!" },
-    { id: 3, user: "Elena R.", time: "Yesterday", type: "Social", text: "Free gardening soil available at my curb if anyone wants it!" }
+    { id: 1, user: 'Sarah Jenkins', time: '2h ago', type: 'Question', text: 'Does anyone know what time the parade starts on Saturday?' },
+    { id: 2, user: 'Mark D.', time: '5h ago', type: 'Alert', text: 'Lost orange tabby cat near 4th street. Please keep an eye out!' },
+    { id: 3, user: 'Elena R.', time: 'Yesterday', type: 'Social', text: 'Free gardening soil available at my curb if anyone wants it!' }
+  ];
+
+  const entertainmentVideos = [
+    { id: 1, title: "Relaxing Nature Walk & Bird Sounds", thumb: "https://images.unsplash.com/photo-1472214103451-9374bd1c798e?auto=format&fit=crop&w=600&q=80", url: "https://www.youtube.com/watch?v=IPcNDvqLzXo" },
+    { id: 2, title: "Classic 1950s Comedy Compilation", thumb: "https://images.unsplash.com/photo-1585699324551-f6c309eedeca?auto=format&fit=crop&w=600&q=80", url: "https://www.youtube.com/watch?v=kYUPNwQYcUM" }
+  ];
+
+  const worldNews = [
+    { id: 1, title: "New James Webb Space Telescope Images Released", img: "https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&w=600&q=80" },
+    { id: 2, title: "Global Health Initiative Shows Promising Results", img: "https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=600&q=80" },
+    { id: 3, title: "Record Numbers at International Flower Show", img: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?auto=format&fit=crop&w=600&q=80" }
   ];
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const initMemoryGame = () => {
+    const deck = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+    setCards(deck);
+    setMatchedCards([]);
+    setFlippedCards([]);
+    setActiveGame('memory');
+  };
+
+  const initStarGame = () => {
+    setScore(0);
+    setActiveGame('star');
+    moveStar();
+  };
+
+  const moveStar = () => {
+    setStarPos(Math.floor(Math.random() * 9));
+  };
+
+  const handleCardClick = (index) => {
+    if (flippedCards.length === 2 || matchedCards.includes(index) || flippedCards.includes(index)) return;
+    const newFlipped = [...flippedCards, index];
+    setFlippedCards(newFlipped);
+    
+    if (newFlipped.length === 2) {
+      if (cards[newFlipped[0]] === cards[newFlipped[1]]) {
+        setMatchedCards([...matchedCards, ...newFlipped]);
+        setFlippedCards([]);
+      } else {
+        setTimeout(() => setFlippedCards([]), 1000);
+      }
+    }
+  };
 
   const toggleMedication = (id) => {
     setMedications(meds => meds.map(m => m.id === id ? { ...m, taken: !m.taken } : m));
@@ -75,8 +137,42 @@ export default function App() {
     setEditingPillId(null);
   };
 
+  const handleAddPill = () => {
+    if (newPillName.trim()) {
+      setMedications([...medications, { 
+        id: Date.now(), 
+        name: newPillName, 
+        time: newPillTime, 
+        taken: false, 
+        color: 'bg-purple-100 border-purple-400' 
+      }]);
+      setNewPillName('');
+      setNewPillTime('08:00');
+      setIsAddingPill(false);
+    }
+  };
+
+  const handleAddContact = () => {
+    if (newContactName.trim()) {
+      setContacts([...contacts, { 
+        id: Date.now(), 
+        name: newContactName, 
+        type: 'Mobile', 
+        phone: newContactPhone, 
+        icon: <Phone className="w-8 h-8" /> 
+      }]);
+      setNewContactName('');
+      setNewContactPhone('');
+      setIsAddingContact(false);
+    }
+  };
+
   const formatTimeStr = (time24) => {
-    const [h, m] = time24.split(':');
+    if (!time24) return "";
+    let clean = time24.replace(':', '');
+    if (clean.length !== 4) clean = clean.padStart(4, '0');
+    const h = clean.substring(0, 2);
+    const m = clean.substring(2, 4);
     const hNum = parseInt(h, 10);
     const ampm = hNum >= 12 ? 'PM' : 'AM';
     const h12 = hNum % 12 || 12;
@@ -85,9 +181,9 @@ export default function App() {
 
   const getGreeting = () => {
     const hour = currentTime.getHours();
-    if (hour < 12) return { text: "Good Morning", icon: <Sunrise className="w-10 h-10 text-orange-400" /> };
-    if (hour < 18) return { text: "Good Afternoon", icon: <Sun className="w-10 h-10 text-yellow-400" /> };
-    return { text: "Good Evening", icon: <Sunset className="w-10 h-10 text-indigo-400" /> };
+    if (hour < 12) return { text: 'Good Morning' };
+    if (hour < 18) return { text: 'Good Afternoon' };
+    return { text: 'Good Evening' };
   };
 
   const timeString = currentTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
@@ -158,7 +254,7 @@ export default function App() {
   const greeting = getGreeting();
 
   const navItems = [
-    { id: 'placeholder', icon: <LayoutGrid className="w-8 h-8" />, label: 'More' },
+    { id: 'entertainment', icon: <Tv className="w-8 h-8" />, label: 'Fun' },
     { id: 'health', icon: <Activity className="w-8 h-8" />, label: 'Health' },
     { id: 'home', icon: <HomeIcon className="w-8 h-8" />, label: 'Home' },
     { id: 'contacts', icon: <Users className="w-8 h-8" />, label: 'Contacts' },
@@ -192,17 +288,10 @@ export default function App() {
               
               {/* Welcome Screen */}
               <section className={`${styles.card} rounded-[2.5rem] p-8 transition-all overflow-hidden relative`}>
-                <div className="flex items-center gap-4 mb-2">
-                  <div className={`p-4 rounded-2xl ${styles.iconContainer}`}>
-                    {greeting.icon}
-                  </div>
-                  <div>
-                    <h2 className="text-4xl font-black">Welcome, Arthur</h2>
-                    <p className="text-xl font-bold opacity-70">{greeting.text}</p>
-                  </div>
-                </div>
-                <div className="mt-6 p-4 rounded-2xl border-2 border-dashed border-current opacity-60">
-                  <p className="text-lg font-bold">
+                <div className="flex flex-col">
+                  <h2 className="text-4xl font-black">Welcome, Arthur</h2>
+                  <p className="text-xl font-bold opacity-70 mb-4">{greeting.text}</p>
+                  <p className="text-lg font-bold opacity-80">
                     {currentTime.getHours() < 12 
                       ? "Have a coffee and check your morning pills." 
                       : currentTime.getHours() < 18 
@@ -215,7 +304,7 @@ export default function App() {
               {!mood ? (
                 <section className={`${styles.card} rounded-[2.5rem] p-8 transition-all`}>
                   <h2 className="text-3xl font-black text-center mb-8 flex items-center justify-center gap-3">
-                    <Heart className="w-10 h-10" fill="currentColor" /> 
+                    <Heart className="w-10 h-10 fill-current" /> 
                     How are you?
                   </h2>
                   <div className="grid grid-cols-1 gap-4">
@@ -233,19 +322,15 @@ export default function App() {
                 </section>
               ) : (
                 <div className={`${styles.card} rounded-[2.5rem] p-8 text-center animate-in zoom-in transition-all relative overflow-hidden`}>
-                  {/* Visual feedback depending on mood */}
                   <div className={`absolute top-0 left-0 w-2 h-full ${mood === 'good' ? 'bg-green-500' : mood === 'okay' ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                  
                   <h2 className="text-4xl font-black mb-4 leading-tight">
-                    {mood === 'good' ? 'Wonderful!' : mood === 'okay' ? 'Hang in there!' : 'We are here to help'}
+                    {mood === 'good' ? 'Wonderful!' : mood === 'okay' ? 'Take it easy' : 'We all have tough days'}
                   </h2>
-                  
                   <p className="text-xl font-bold opacity-80 mb-6">
-                    {mood === 'good' ? "That's great to hear, Arthur! Keep that energy going." : 
-                     mood === 'okay' ? "Every day has its ups and downs. Take it easy." : 
-                     "I've notified your primary contact that you're feeling a bit low today."}
+                    {mood === 'good' ? "That's wonderful! It's a great time to do a puzzle, tend to a hobby, or maybe call a friend to share your good mood." : 
+                     mood === 'okay' ? "That's perfectly fine. Maybe listen to some relaxing music, read a good book, or enjoy a warm cup of tea." : 
+                     "I'm sorry you're feeling down. Try resting in a comfortable chair, watching your favorite show, or simply taking some deep breaths."}
                   </p>
-
                   <button onClick={() => setMood(null)} className="text-2xl font-bold underline opacity-60 mt-4 p-2">Change mood</button>
                 </div>
               )}
@@ -337,38 +422,22 @@ export default function App() {
           {/* TAB: COMMUNITY */}
           {activeTab === 'community' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 pb-12">
-              {/* Map */}
               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all overflow-hidden`}>
-                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><MapIcon className="w-6 h-6"/> Local Map</h2>
+                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><MapIcon className="w-6 h-6" /> Local Map</h2>
                 <div className={`w-full h-64 rounded-[2rem] border-4 overflow-hidden relative ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 shadow-inner'}`}>
                   <iframe 
                     title="Community Map"
                     src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d11534.621213768297!2d-79.39054366601445!3d43.717757989341495!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x882b33230559489f%3A0xe6108154e0c464c!2sSunnybrook%20Health%20Sciences%20Centre!5e0!3m2!1sen!2sca!4v1715638200000!5m2!1sen!2sca" 
-                    width="100%" 
-                    height="100%" 
-                    className={`border-0 transition-all ${styles.mapFilter}`}
-                    allowFullScreen="" 
-                    loading="lazy" 
-                    referrerPolicy="no-referrer-when-downgrade"
+                    width="100%" height="100%" className={`border-0 transition-all ${styles.mapFilter}`} allowFullScreen="" loading="lazy" referrerPolicy="no-referrer-when-downgrade"
                   ></iframe>
-                  <div className="absolute bottom-4 right-4 flex flex-col gap-2">
-                    <button className={`p-3 rounded-2xl border-2 flex items-center justify-center ${styles.modalBg}`} onClick={() => alert("Finding directions to hospital...")}>
-                      <Navigation className="w-6 h-6" />
-                    </button>
-                  </div>
                 </div>
               </section>
 
-              {/* News */}
               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
-                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Newspaper className="w-6 h-6"/> Local News</h2>
+                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Newspaper className="w-6 h-6" /> Local News</h2>
                 <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
                   {newsArticles.map((article) => (
-                    <button 
-                      key={article.id} 
-                      onClick={() => setSelectedNews(article)}
-                      className={`min-w-[240px] border-4 rounded-[2rem] p-4 snap-start text-left active:scale-95 transition-all ${themeMode !== 'default' ? 'border-current' : 'border-slate-100 bg-slate-50 shadow-sm'}`}
-                    >
+                    <button key={article.id} onClick={() => setSelectedNews(article)} className={`min-w-[240px] border-4 rounded-[2rem] p-4 snap-start text-left active:scale-95 transition-all ${themeMode !== 'default' ? 'border-current' : 'border-slate-100 bg-slate-50 shadow-sm'}`}>
                       <img src={article.img} alt="" className="w-full h-28 object-cover rounded-xl mb-3" />
                       <h3 className="font-black text-lg leading-tight mb-2">{article.title}</h3>
                       <div className="flex items-center justify-between opacity-60 font-bold text-sm">
@@ -380,52 +449,19 @@ export default function App() {
                 </div>
               </section>
 
-              {/* Neighbor Chat */}
               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
-                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><MessageSquare className="w-6 h-6"/> Neighbor Chat</h2>
-                
-                {/* NEW: Input Area */}
+                <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><MessageSquare className="w-6 h-6" /> Neighbor Chat</h2>
                 <div className={`mb-6 p-4 rounded-[2rem] border-4 ${themeMode !== 'default' ? 'border-current' : 'border-slate-200'}`}>
-                  <textarea 
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    placeholder="Type a message to neighbors..."
-                    className={`w-full min-h-[100px] p-4 rounded-xl text-xl font-bold resize-none mb-4 outline-none transition-all ${styles.chatInput}`}
-                  />
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => alert("Photo library access is not available in preview.")}
-                      className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl border-2 font-black text-lg active:scale-95 transition-all ${themeMode !== 'default' ? 'border-current' : 'bg-slate-100 border-slate-300'}`}
-                    >
-                      <ImageIcon className="w-6 h-6" />
-                      Add Photo
-                    </button>
-                    <button 
-                      onClick={() => { if(chatMessage) { alert("Message sent to neighbors!"); setChatMessage(""); } }}
-                      className={`flex-1 flex items-center justify-center gap-2 p-4 rounded-2xl font-black text-lg active:scale-95 transition-all shadow-lg ${styles.saveBtn}`}
-                    >
-                      <Send className="w-6 h-6" />
-                      Post
-                    </button>
-                  </div>
+                  <textarea value={chatMessage} onChange={(e) => setChatMessage(e.target.value)} placeholder="Type a message to neighbors..." className={`w-full min-h-[100px] p-4 rounded-xl text-xl font-bold resize-none mb-4 outline-none transition-all ${styles.chatInput}`} />
+                  <button onClick={() => { if(chatMessage) { alert("Message sent!"); setChatMessage(""); } }} className={`w-full flex items-center justify-center gap-2 p-4 rounded-2xl font-black text-lg active:scale-95 transition-all shadow-lg ${styles.saveBtn}`}>
+                    <Send className="w-6 h-6" /> Post
+                  </button>
                 </div>
-
                 <div className="space-y-4">
                   {neighborPosts.map((post) => (
                     <div key={post.id} className={`p-5 border-4 rounded-[2rem] ${themeMode !== 'default' ? 'border-current' : 'border-slate-100 bg-slate-50'}`}>
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex flex-col">
-                          <span className="font-black text-xl leading-none">{post.user}</span>
-                          <div className="flex items-center gap-2 mt-1 opacity-60 text-sm font-bold">
-                            <Clock className="w-4 h-4" />
-                            <span>{post.time}</span>
-                          </div>
-                        </div>
-                        <span className={`text-xs font-black uppercase tracking-wider py-1 px-3 rounded-full border-2 ${themeMode !== 'default' ? 'border-current' : styles.tag}`}>
-                          {post.type}
-                        </span>
-                      </div>
-                      <p className="text-lg font-bold leading-relaxed">{post.text}</p>
+                      <span className="font-black text-xl leading-none">{post.user}</span>
+                      <p className="text-lg font-bold leading-relaxed mt-2">{post.text}</p>
                     </div>
                   ))}
                 </div>
@@ -433,16 +469,58 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: PLACEHOLDER */}
-          {activeTab === 'placeholder' && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 h-full flex items-center justify-center min-h-[50vh]">
-               <div className={`${styles.card} rounded-[2.5rem] p-10 text-center transition-all w-full`}>
-                 <LayoutGrid className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                 <h2 className="text-3xl font-black mb-2">More Features</h2>
-                 <p className="text-xl font-bold opacity-70">Coming soon to this section.</p>
-               </div>
+          {/* TAB: ENTERTAINMENT */}
+          {activeTab === 'entertainment' && (
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 pb-12">
+               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
+                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Gamepad2 className="w-6 h-6" /> Simple Games</h2>
+                 <div className="space-y-4">
+                    <div className={`p-5 rounded-[2rem] border-4 flex justify-between items-center ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 bg-slate-50'}`}>
+                        <div>
+                           <h3 className="text-2xl font-black">Memory Match</h3>
+                           <p className="opacity-70 font-bold mt-1 text-lg">Find the pairs</p>
+                        </div>
+                        <button onClick={initMemoryGame} className={`px-6 py-4 rounded-2xl font-black text-xl active:scale-95 transition-all shadow-md ${styles.saveBtn}`}>Play</button>
+                    </div>
+                    <div className={`p-5 rounded-[2rem] border-4 flex justify-between items-center ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 bg-slate-50'}`}>
+                        <div>
+                           <h3 className="text-2xl font-black">Tap the Star</h3>
+                           <p className="opacity-70 font-bold mt-1 text-lg">Fun and quick</p>
+                        </div>
+                        <button onClick={initStarGame} className={`px-6 py-4 rounded-2xl font-black text-xl active:scale-95 transition-all shadow-md ${styles.saveBtn}`}>Play</button>
+                    </div>
+                 </div>
+               </section>
+
+               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
+                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Tv className="w-6 h-6" /> Popular Videos</h2>
+                 <div className="space-y-5">
+                    {entertainmentVideos.map(video => (
+                       <a key={video.id} href={video.url} target="_blank" rel="noreferrer" className={`block p-4 rounded-[2rem] border-4 active:scale-95 transition-all ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 bg-slate-50'}`}>
+                           <div className="relative h-40 mb-3 rounded-xl overflow-hidden">
+                              <img src={video.thumb} alt={video.title} className="w-full h-full object-cover" />
+                              <div className="absolute inset-0 bg-black/40 flex items-center justify-center"><Play className="w-14 h-14 text-white opacity-90" fill="currentColor" /></div>
+                           </div>
+                           <h3 className="text-xl font-black flex justify-between items-center leading-tight">{video.title}<ExternalLink className="w-6 h-6 opacity-50 ml-2" /></h3>
+                       </a>
+                    ))}
+                 </div>
+               </section>
+
+               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`}>
+                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Globe className="w-6 h-6" /> World News</h2>
+                 <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
+                   {worldNews.map(news => (
+                     <div key={news.id} className={`min-w-[240px] border-4 rounded-[2rem] p-4 snap-start text-left ${themeMode !== 'default' ? 'border-current' : 'border-slate-100 bg-slate-50 shadow-sm'}`}>
+                       <img src={news.img} alt="" className="w-full h-32 object-cover rounded-xl mb-3" />
+                       <h3 className="font-black text-lg leading-tight mb-2">{news.title}</h3>
+                     </div>
+                   ))}
+                 </div>
+               </section>
             </div>
           )}
+
         </main>
 
         {/* SOS BUTTON */}
@@ -463,7 +541,53 @@ export default function App() {
           ))}
         </nav>
 
-        {/* MODAL: SETTINGS */}
+        {/* GAME MODAL: MEMORY MATCH */}
+        {activeGame === 'memory' && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8 flex flex-col items-center`}>
+              <div className="w-full flex items-center justify-between mb-8">
+                <h2 className="text-4xl font-black">Memory Match</h2>
+                <button onClick={() => setActiveGame(null)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-10 h-10" /></button>
+              </div>
+              <div className="grid grid-cols-3 gap-3 w-full mb-8">
+                {cards.map((emoji, i) => (
+                  <button key={i} onClick={() => handleCardClick(i)} className={`h-24 rounded-2xl border-4 text-4xl flex items-center justify-center transition-all ${themeMode !== 'default' ? 'border-current bg-transparent' : matchedCards.includes(i) ? 'bg-green-100 border-green-500' : flippedCards.includes(i) ? 'bg-white border-blue-500' : 'bg-slate-200 border-slate-300'}`}>
+                    {(flippedCards.includes(i) || matchedCards.includes(i)) ? emoji : '?'}
+                  </button>
+                ))}
+              </div>
+              {matchedCards.length === cards.length && <p className="text-3xl font-black mb-4">Well Done!</p>}
+              <button onClick={initMemoryGame} className={`w-full text-3xl font-black py-6 rounded-[2rem] ${styles.saveBtn}`}>Restart</button>
+            </div>
+          </div>
+        )}
+
+        {/* GAME MODAL: TAP THE STAR */}
+        {activeGame === 'star' && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
+            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8 flex flex-col items-center`}>
+              <div className="w-full flex items-center justify-between mb-8">
+                <h2 className="text-4xl font-black">Tap the Star</h2>
+                <button onClick={() => setActiveGame(null)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-10 h-10" /></button>
+              </div>
+              <p className="text-3xl font-black mb-6">Score: {score}</p>
+              <div className="grid grid-cols-3 gap-3 w-full mb-8">
+                {[...Array(9)].map((_, i) => (
+                  <div key={i} className={`h-24 rounded-2xl border-4 flex items-center justify-center ${themeMode !== 'default' ? 'border-current' : 'border-slate-200 bg-slate-100'}`}>
+                    {starPos === i && (
+                      <button onClick={() => { setScore(s => s + 1); moveStar(); }} className="animate-bounce">
+                        <Star className="w-16 h-16 text-yellow-500 fill-yellow-500" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <button onClick={initStarGame} className={`w-full text-3xl font-black py-6 rounded-[2rem] ${styles.saveBtn}`}>Restart</button>
+            </div>
+          </div>
+        )}
+
+        {/* SETTINGS MODAL */}
         {isSettingsOpen && (
           <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-50 flex items-center justify-center p-4">
             <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8 overflow-y-auto max-h-[90vh]`}>
@@ -488,72 +612,65 @@ export default function App() {
           </div>
         )}
 
-        {/* MODAL: NEWS DETAIL */}
-        {selectedNews && (
-          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[70] flex items-center justify-center p-4">
-            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] overflow-hidden`}>
-              <div className="relative h-56">
-                <img src={selectedNews.img} className="w-full h-full object-cover" alt="" />
-                <button 
-                  onClick={() => setSelectedNews(null)} 
-                  className="absolute top-4 right-4 p-3 bg-black/50 text-white rounded-full backdrop-blur-md"
-                >
-                  <X className="w-8 h-8" />
-                </button>
-              </div>
-              <div className="p-8">
-                <h2 className="text-3xl font-black mb-4 leading-tight">{selectedNews.title}</h2>
-                <p className="text-xl font-bold opacity-80 leading-relaxed mb-8">
-                  {selectedNews.content}
-                </p>
-                <button 
-                  onClick={() => setSelectedNews(null)} 
-                  className={`w-full text-2xl font-black py-5 rounded-[2rem] ${styles.saveBtn}`}
-                >
-                  Back to Community
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* SOS MODAL */}
         {sosActive && (
           <div className="fixed inset-0 bg-red-600 z-[60] flex items-center justify-center p-4">
             <div className="bg-white w-full max-w-md rounded-[3rem] p-10 text-center text-slate-900 shadow-2xl">
               <h2 className="text-5xl font-black mb-6">Call 911?</h2>
-              <button onClick={() => { alert("Calling 911..."); setSosActive(false)}} className="w-full bg-red-600 text-white text-3xl font-black py-8 rounded-[2rem] mb-4 border-4 border-white">YES, CALL NOW</button>
-              <button onClick={() => setSosActive(false)} className="initial bg-slate-200 text-slate-800 text-2xl font-black py-6 rounded-[2rem] border-4 border-transparent w-full">Cancel</button>
+              <button onClick={() => { alert('Calling 911...'); setSosActive(false)}} className="w-full bg-red-600 text-white text-3xl font-black py-8 rounded-[2rem] mb-4 border-4 border-white">YES, CALL NOW</button>
+              <button onClick={() => setSosActive(false)} className="bg-slate-200 text-slate-800 text-2xl font-black py-6 rounded-[2rem] w-full">Cancel</button>
             </div>
           </div>
         )}
 
-        {/* ADD MODALS */}
-        {(isAddingPill || isAddingContact) && (
-          <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        {/* ADD PILL MODAL */}
+        {isAddingPill && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[80] flex items-center justify-center p-4">
             <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8`}>
-              <h2 className="text-4xl font-black mb-8">{isAddingPill ? 'New Pill' : 'New Contact'}</h2>
-              <input type="text" value={isAddingPill ? newPillName : newContactName} onChange={(e) => isAddingPill ? setNewPillName(e.target.value) : setNewContactName(e.target.value)} placeholder="Name..." className={`w-full text-3xl p-6 rounded-[1.5rem] outline-none mb-4 ${styles.inputBg}`} />
-              {isAddingPill && (
-                <div className="mb-4">
-                  <label className="text-xl font-bold mb-2 block opacity-80">Time to take:</label>
-                  <input type="time" value={newPillTime} onChange={(e) => setNewPillTime(e.target.value)} className={`w-full text-3xl p-6 rounded-[1.5rem] outline-none ${styles.inputBg}`} />
-                </div>
-              )}
-              {isAddingContact && <input type="tel" value={newContactPhone} onChange={(e) => setNewContactPhone(e.target.value)} placeholder="Phone Number..." className={`w-full text-3xl p-6 rounded-[1.5rem] outline-none mb-4 ${styles.inputBg}`} />}
-              <button onClick={() => {
-                if(isAddingPill) {
-                  setMedications([...medications, { id: Date.now(), name: newPillName, time: newPillTime, taken: false, color: 'bg-white border-blue-400' }]);
-                  setIsAddingPill(false); setNewPillName(''); setNewPillTime('08:00');
-                } else {
-                  setContacts([...contacts, { id: Date.now(), name: newContactName, type: 'Mobile', phone: newContactPhone, icon: <Phone className="w-8 h-8" /> }]);
-                  setIsAddingContact(false); setNewContactName(''); setNewContactPhone('');
-                }
-              }} className={`w-full text-3xl font-black py-6 rounded-[2rem] mt-2 ${styles.saveBtn}`}>Save</button>
-              <button onClick={() => { setIsAddingPill(false); setIsAddingContact(false); setNewContactPhone(''); }} className={`w-full mt-6 text-xl font-bold ${styles.cancelBtn}`}>Cancel</button>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-4xl font-black">Add Pill</h2>
+                <button onClick={() => setIsAddingPill(false)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-8 h-8" /></button>
+              </div>
+              <div className="space-y-6">
+                <input type="text" value={newPillName} onChange={e => setNewPillName(e.target.value)} className={`w-full p-4 rounded-2xl text-xl font-bold outline-none ${styles.inputBg}`} placeholder="Medication Name" />
+                <input type="time" value={newPillTime} onChange={e => setNewPillTime(e.target.value)} className={`w-full p-4 rounded-2xl text-xl font-bold outline-none ${styles.inputBg}`} />
+                <button onClick={handleAddPill} className={`w-full text-2xl font-black py-5 rounded-[2rem] shadow-lg ${styles.saveBtn}`}>Save Pill</button>
+              </div>
             </div>
           </div>
         )}
+
+        {/* ADD CONTACT MODAL */}
+        {isAddingContact && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[80] flex items-center justify-center p-4">
+            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8`}>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-4xl font-black">Add Contact</h2>
+                <button onClick={() => setIsAddingContact(false)} className={`p-3 rounded-full ${styles.iconContainer}`}><X className="w-8 h-8" /></button>
+              </div>
+              <div className="space-y-6">
+                <input type="text" value={newContactName} onChange={e => setNewContactName(e.target.value)} className={`w-full p-4 rounded-2xl text-xl font-bold outline-none ${styles.inputBg}`} placeholder="Contact Name" />
+                <input type="tel" value={newContactPhone} onChange={e => setNewContactPhone(e.target.value)} className={`w-full p-4 rounded-2xl text-xl font-bold outline-none ${styles.inputBg}`} placeholder="Phone Number" />
+                <button onClick={handleAddContact} className={`w-full text-2xl font-black py-5 rounded-[2rem] shadow-lg ${styles.saveBtn}`}>Save Contact</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* NEWS DETAIL MODAL */}
+        {selectedNews && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[70] flex items-center justify-center p-4">
+            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] overflow-hidden`}>
+              <img src={selectedNews.img} className="w-full h-56 object-cover" alt="" />
+              <div className="p-8">
+                <h2 className="text-3xl font-black mb-4 leading-tight">{selectedNews.title}</h2>
+                <p className="text-xl font-bold opacity-80 leading-relaxed mb-8">{selectedNews.content}</p>
+                <button onClick={() => setSelectedNews(null)} className={`w-full text-2xl font-black py-5 rounded-[2rem] ${styles.saveBtn}`}>Close</button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );
