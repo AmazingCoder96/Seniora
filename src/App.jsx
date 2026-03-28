@@ -4,7 +4,7 @@ import {
   X, Plus, UserPlus, Settings, Palette, Image as ImageIcon, Send,
   Activity, Home as HomeIcon, Users, Map as MapIcon, 
   HeartPulse, Footprints, Moon, MessageSquare, Newspaper, Edit2, 
-  Clock, Tag, ChevronRight, Navigation, Tv, Gamepad2, Play, ExternalLink, Globe, Star, Lightbulb, Utensils, User, Wrench, ShieldCheck, Bell
+  Clock, Tag, ChevronRight, Navigation, Tv, Gamepad2, Play, ExternalLink, Globe, Star, Lightbulb, Utensils, User, Wrench, ShieldCheck, Bell, BookOpen
 } from 'lucide-react';
 
 export default function App() {
@@ -26,9 +26,14 @@ export default function App() {
   const [isAddingContact, setIsAddingContact] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isRecipeOpen, setIsRecipeOpen] = useState(false);
+  const [isStoryModalOpen, setIsStoryModalOpen] = useState(false);
   const [editingPillId, setEditingPillId] = useState(null);
   const [selectedNews, setSelectedNews] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
+
+  // Short Story State
+  const [currentStory, setCurrentStory] = useState(null);
+  const [isLoadingStory, setIsLoadingStory] = useState(false);
 
   // Scroll to top on tab change
   useEffect(() => {
@@ -57,6 +62,32 @@ export default function App() {
     document.addEventListener('click', handleInteraction);
     return () => document.removeEventListener('click', handleInteraction);
   }, []);
+
+  // Fetch initial short story
+  useEffect(() => {
+    fetchNewStory();
+  }, []);
+
+  const fetchNewStory = async () => {
+    setIsLoadingStory(true);
+    try {
+      const response = await fetch('https://shortstories-api.onrender.com/');
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+      setCurrentStory(data);
+    } catch (error) {
+      console.error("Failed to fetch story", error);
+      // Fallback story if API fails
+      setCurrentStory({
+        title: "The Porcupine and the Snakes",
+        author: "Aesop's Fables",
+        story: "A Porcupine was looking for a good home. At last he found a little sheltered cave, where lived a family of Snakes. He asked them to let him share the cave with them, and the Snakes kindly consented. The Snakes soon wished they had not given him permission to stay. His sharp quills pricked them at every turn, and at last they politely asked him to leave. \"I am very well satisfied, thank you,\" said the Porcupine. \"I intend to stay right here.\" And with that, he politely escorted the Snakes out of doors. And to save their skins, the Snakes had to look for another home.",
+        moral: "Give a finger and lose a hand."
+      });
+    } finally {
+      setIsLoadingStory(false);
+    }
+  };
 
   // Web Audio Synth for Games
   const playSound = (type) => {
@@ -863,6 +894,39 @@ export default function App() {
           {activeTab === 'entertainment' && (
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 pb-12" aria-label="Entertainment Tab">
                
+               {/* Short Story Component */}
+               <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`} aria-label="Random Short Story">
+                 <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><BookOpen className="w-6 h-6" aria-hidden="true" /> Short Story</h2>
+                 <div className={`p-5 rounded-[2rem] border-4 ${themeMode !== 'default' && themeMode !== 'custom' ? 'border-current' : themeMode === 'custom' ? 'theme-custom-border' : 'border-slate-200 bg-slate-50'}`}>
+                   {isLoadingStory && !currentStory ? (
+                     <p className="font-bold opacity-70 text-lg" aria-live="polite">Finding a story for you...</p>
+                   ) : currentStory ? (
+                     <>
+                       <h3 className="text-2xl font-black mb-1">{currentStory.title}</h3>
+                       <p className="opacity-70 font-bold mb-5 text-lg">by {currentStory.author}</p>
+                       <div className="flex flex-col gap-3">
+                         <button 
+                           onClick={() => setIsStoryModalOpen(true)} 
+                           aria-label={`Read story: ${currentStory.title}`} 
+                           className={`w-full py-4 rounded-2xl font-black text-xl active:scale-95 transition-all shadow-md ${styles.saveBtn}`}
+                         >
+                           Read
+                         </button>
+                         <button 
+                           onClick={fetchNewStory} 
+                           aria-label="Fetch a new random story" 
+                           className={`w-full py-4 rounded-2xl font-black text-xl active:scale-95 transition-all border-4 ${themeMode !== 'default' && themeMode !== 'custom' ? 'border-current' : themeMode === 'custom' ? 'theme-custom-border theme-custom-text' : 'border-slate-300 bg-white text-slate-800'}`}
+                         >
+                           {isLoadingStory ? 'Loading...' : 'New Story'}
+                         </button>
+                       </div>
+                     </>
+                   ) : (
+                     <p className="font-bold opacity-70 text-lg">Failed to load story. Please try again.</p>
+                   )}
+                 </div>
+               </section>
+
                {/* Fact of the Day */}
                <section className={`${styles.card} rounded-[2.5rem] p-6 transition-all`} aria-label="Fact of the Day">
                  <h2 className="text-2xl font-black mb-4 flex items-center gap-2"><Lightbulb className="w-6 h-6" aria-hidden="true" /> Fact of the Day</h2>
@@ -962,6 +1026,34 @@ export default function App() {
             </button>
           ))}
         </nav>
+
+        {/* STORY MODAL */}
+        {isStoryModalOpen && currentStory && (
+          <div className="fixed inset-0 bg-slate-900/95 backdrop-blur-xl z-[90] flex items-center justify-center p-4" aria-modal="true" role="dialog" aria-label={`Reading story: ${currentStory.title}`}>
+            <div className={`${styles.modalBg} w-full max-w-md rounded-[3rem] p-8 overflow-y-auto max-h-[90vh]`}>
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-3xl font-black leading-tight flex-1 mr-4">{currentStory.title}</h2>
+                <button onClick={() => setIsStoryModalOpen(false)} aria-label="Close story" className={`p-3 rounded-full flex-shrink-0 ${styles.iconContainer}`}><X className="w-8 h-8" aria-hidden="true" /></button>
+              </div>
+              <p className="opacity-70 font-bold mb-8 text-xl">by {currentStory.author}</p>
+
+              <div className="space-y-6">
+                <p className="text-xl font-bold opacity-90 leading-relaxed whitespace-pre-wrap">
+                  {currentStory.story}
+                </p>
+
+                {currentStory.moral && (
+                  <div className={`p-5 mt-8 rounded-2xl border-4 ${themeMode !== 'default' && themeMode !== 'custom' ? 'border-current bg-transparent' : themeMode === 'custom' ? 'theme-custom-border theme-custom-bg' : 'border-blue-200 bg-blue-50 text-slate-900'}`}>
+                    <h4 className="font-black text-xl mb-2 uppercase tracking-wide">Moral</h4>
+                    <p className="text-xl font-bold leading-snug">{currentStory.moral}</p>
+                  </div>
+                )}
+              </div>
+
+              <button onClick={() => setIsStoryModalOpen(false)} aria-label="Done reading story" className={`w-full text-2xl font-black py-5 rounded-[2rem] mt-8 shadow-md ${styles.saveBtn}`}>Done</button>
+            </div>
+          </div>
+        )}
 
         {/* GAME MODAL: MEMORY MATCH */}
         {activeGame === 'memory' && (
