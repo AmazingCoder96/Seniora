@@ -70,25 +70,98 @@ export default function App() {
 
   const fetchNewStory = async () => {
     setIsLoadingStory(true);
+  
+    // 75% API, 25% TXT
+    const useApi = Math.random() < 0.75;
+  
+    const parseStoriesTxt = (txt) => {
+      try {
+        // split by line and remove empty lines
+        const lines = txt.split("\n").map(l => l.trim()).filter(Boolean);
+  
+        const stories = [];
+  
+        for (let line of lines) {
+          try {
+            const obj = JSON.parse(line);
+            if (obj.title && obj.story) {
+              stories.push(obj);
+            }
+          } catch (e) {
+            console.warn("Skipping invalid story line");
+          }
+        }
+  
+        return stories;
+      } catch (e) {
+        console.error("stories.txt parse error", e);
+        return [];
+      }
+    };
+  
     try {
-      const response = await fetch('https://shortstories-api.onrender.com/');
-      if (!response.ok) throw new Error('Network response was not ok');
-      const data = await response.json();
-      setCurrentStory(data);
+  
+      if (useApi) {
+  
+        // ----- API (75%) -----
+        const response = await fetch("https://shortstories-api.onrender.com/");
+        if (!response.ok) throw new Error("API failed");
+  
+        const data = await response.json();
+        setCurrentStory(data);
+  
+      } else {
+  
+        // ----- TXT (25%) -----
+        try {
+  
+          const txtRes = await fetch("/Stories.txt");
+  
+          if (!txtRes.ok) throw new Error("stories.txt missing");
+  
+          const txt = await txtRes.text();
+  
+          const stories = parseStoriesTxt(txt);
+  
+          if (stories.length > 0) {
+  
+            const randomStory =
+              stories[Math.floor(Math.random() * stories.length)];
+  
+            setCurrentStory(randomStory);
+  
+          } else {
+            throw new Error("stories empty");
+          }
+  
+        } catch (txtErr) {
+  
+          console.warn("TXT failed, using API fallback");
+  
+          const response = await fetch("https://shortstories-api.onrender.com/");
+          const data = await response.json();
+          setCurrentStory(data);
+  
+        }
+  
+      }
+  
     } catch (error) {
-      console.error("Failed to fetch story", error);
-      // Fallback story if API fails
+  
+      console.error("Story load failed", error);
+  
+      // final fallback
       setCurrentStory({
         title: "The Porcupine and the Snakes",
         author: "Aesop's Fables",
-        story: "A Porcupine was looking for a good home. At last he found a little sheltered cave, where lived a family of Snakes. He asked them to let him share the cave with them, and the Snakes kindly consented. The Snakes soon wished they had not given him permission to stay. His sharp quills pricked them at every turn, and at last they politely asked him to leave. \"I am very well satisfied, thank you,\" said the Porcupine. \"I intend to stay right here.\" And with that, he politely escorted the Snakes out of doors. And to save their skins, the Snakes had to look for another home.",
+        story: "A Porcupine searched for a home and asked a family of snakes if he could stay in their cave. They agreed, but his sharp quills kept pricking them until they begged him to leave.",
         moral: "Give a finger and lose a hand."
       });
+  
     } finally {
       setIsLoadingStory(false);
     }
   };
-
   // Web Audio Synth for Games
   const playSound = (type) => {
     try {
